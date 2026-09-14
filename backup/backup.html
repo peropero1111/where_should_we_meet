@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>where_should_we_meet</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+      background: #eef4f2;
+      color: #1f2933;
+    }
+
+    main {
+      width: min(1180px, 100%);
+      margin: 0 auto;
+      padding: 28px 18px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 2rem;
+    }
+
+    p {
+      margin: 0 0 16px;
+      color: #64748b;
+      line-height: 1.6;
+    }
+
+    .warning-text {
+      color: #d43f3a;
+      font-weight: 800;
+    }
+
+    .sync-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 34px;
+      margin-bottom: 18px;
+      padding: 7px 10px;
+      border: 1px solid #d7dee8;
+      border-radius: 999px;
+      background: #ffffff;
+      color: #526172;
+      font-size: 0.9rem;
+      font-weight: 700;
+    }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #94a3b8;
+    }
+
+    .sync-status.connected .status-dot {
+      background: #18a66a;
+    }
+
+    .sync-status.local .status-dot {
+      background: #d88b16;
+    }
+
+    .sync-status.error .status-dot {
+      background: #d43f3a;
+    }
+
+    .app {
+      display: grid;
+      grid-template-columns: minmax(320px, 1fr) minmax(320px, 420px);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .map-area,
+    .control-area {
+      background: #ffffff;
+      border: 1px solid #d7dee8;
+      border-radius: 8px;
+      box-shadow: 0 16px 34px rgba(22, 50, 58, 0.12);
+    }
+
+    .map-area {
+      padding: 16px;
+    }
+
+    .map-frame {
+      position: relative;
+      overflow: hidden;
+      border-radius: 8px;
+      background: #050707;
+      border: 1px solid #111827;
+    }
+
+    .map-frame img {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    .marker-group {
+      position: absolute;
+      left: var(--x);
+      top: var(--y);
+      width: 102px;
+      min-height: 34px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      justify-content: center;
+      align-items: center;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+    }
+
+    .marker-avatar {
+      width: 28px;
+      height: 28px;
+      border: 2px solid #ffffff;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: var(--color);
+      color: #ffffff;
+      font-size: 0.78rem;
+      font-weight: 800;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
+    }
+
+    .marker-label {
+      width: 100%;
+      color: #ffffff;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-align: center;
+      text-shadow: 0 1px 4px rgba(0, 0, 0, 0.85);
+    }
+
+    .control-area {
+      padding: 16px;
+    }
+
+    .section-title {
+      margin: 0 0 12px;
+      font-size: 1.05rem;
+    }
+
+    .character-list {
+      display: grid;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .character-row {
+      display: grid;
+      grid-template-columns: 44px 1fr;
+      gap: 10px;
+      align-items: center;
+      padding: 10px;
+      border: 1px solid #d7dee8;
+      border-radius: 8px;
+      background: #f8fbfb;
+    }
+
+    .avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: var(--color);
+      color: #ffffff;
+      font-weight: 800;
+      border: 2px solid #ffffff;
+      box-shadow: 0 4px 12px rgba(31, 41, 51, 0.18);
+    }
+
+    .character-info {
+      display: grid;
+      gap: 7px;
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    .name-line {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+      font-weight: 800;
+    }
+
+    .name-button {
+      appearance: none;
+      width: fit-content;
+      max-width: 100%;
+      padding: 0;
+      border: 0;
+      border-bottom: 1px dotted #1b6f7a;
+      background: transparent;
+      color: #1f2933;
+      font: inherit;
+      font-weight: 800;
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .name-button:hover,
+    .name-button:focus-visible {
+      color: #0f5e68;
+    }
+
+    .memo-line {
+      min-height: 22px;
+      color: #405265;
+      font-size: 0.84rem;
+      font-weight: 700;
+      line-height: 1.35;
+      overflow-wrap: anywhere;
+    }
+
+    .memo-line.empty-memo {
+      color: #94a3b8;
+      font-weight: 600;
+    }
+
+    .memo-editor {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto auto;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .memo-input {
+      width: 100%;
+      min-height: 34px;
+      border: 1px solid #b9c5d2;
+      border-radius: 7px;
+      background: #ffffff;
+      color: #1f2933;
+      font: inherit;
+      padding: 6px 8px;
+    }
+
+    .memo-action {
+      min-height: 34px;
+      padding: 0 9px;
+      border: 1px solid #b9c5d2;
+      border-radius: 7px;
+      background: #ffffff;
+      color: #243242;
+      font: inherit;
+      font-size: 0.82rem;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .memo-action.primary {
+      border-color: #0f6b73;
+      background: #0f6b73;
+      color: #ffffff;
+    }
+
+    .memo-count {
+      grid-column: 1 / -1;
+      color: #64748b;
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-align: right;
+    }
+
+    .current-choice {
+      color: #1b6f7a;
+      font-size: 0.86rem;
+      white-space: nowrap;
+    }
+
+    select {
+      width: 100%;
+      min-height: 38px;
+      border: 1px solid #b9c5d2;
+      border-radius: 7px;
+      background: #ffffff;
+      color: #1f2933;
+      font: inherit;
+      padding: 7px 10px;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .region-box {
+      min-height: 86px;
+      padding: 10px;
+      border: 1px solid #d7dee8;
+      border-radius: 8px;
+      background: #ffffff;
+    }
+
+    .region-heading {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+      font-weight: 800;
+    }
+
+    .count {
+      min-width: 26px;
+      height: 24px;
+      display: inline-grid;
+      place-items: center;
+      border-radius: 999px;
+      background: #e3f4f1;
+      color: #0f5e68;
+      font-size: 0.82rem;
+    }
+
+    .chip-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      max-width: 100%;
+      padding: 5px 7px 5px 5px;
+      border-radius: 999px;
+      background: #f1f5f9;
+      color: #243242;
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+
+    .chip-dot {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      display: inline-grid;
+      place-items: center;
+      flex: 0 0 auto;
+      background: var(--color);
+      color: #ffffff;
+      font-size: 0.62rem;
+      font-weight: 800;
+    }
+
+    .chip-memo {
+      max-width: 12ch;
+      color: #526172;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .empty {
+      color: #94a3b8;
+      font-size: 0.86rem;
+    }
+
+    @media (max-width: 860px) {
+      .app {
+        grid-template-columns: 1fr;
+      }
+
+      main {
+        padding: 18px 12px;
+      }
+    }
+
+    @media (max-width: 440px) {
+      .summary-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .name-line {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      .memo-editor {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .memo-input {
+        grid-column: 1 / -1;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>어디 모여?</h1>
+    <p>강원도, 경기도, 충청도, 전라도, 경상도, 제주도 중에서 각 인원이 모임을 원하는 지역을 고릅니다. 같은 지역을 여러 명이 함께 선택할 수 있습니다.</p>
+    <p>지금 나와있는 지역 및 선택 현황은 랜덤으로 정해진 것 입니다. <span class="warning-text">타인의 지역이나 메모는 수정하지 말아주세요.</span></p>
+    <div id="syncStatus" class="sync-status local">
+      <span class="status-dot" aria-hidden="true"></span>
+      <span id="syncStatusText">Firebase 설정을 입력하면 실시간 동기화됩니다.</span>
+    </div>
+
+    <div class="app">
+      <section class="map-area" aria-label="대한민국 권역 지도">
+        <div class="map-frame">
+          <img src="korea-regions.png" alt="강원도, 경기도, 충청도, 전라도, 경상도, 제주도가 표시된 대한민국 지도" />
+          <div id="mapMarkers"></div>
+        </div>
+      </section>
+
+      <section class="control-area" aria-label="인원별 지역 선택">
+        <h2 class="section-title">인원 선택</h2>
+        <div id="characterList" class="character-list"></div>
+
+        <h2 class="section-title">지역별 선택 현황</h2>
+        <div id="summaryGrid" class="summary-grid"></div>
+      </section>
+    </div>
+  </main>
+
+  <script type="module">
+    const firebaseConfig = {
+      apiKey: "AIzaSyBMb5sOaM_-T3GIQNGusKHNrclNSqgnso0",
+      authDomain: "where-should-we-meet-f0b1c.firebaseapp.com",
+      databaseURL: "https://where-should-we-meet-f0b1c-default-rtdb.firebaseio.com/",
+      projectId: "where-should-we-meet-f0b1c",
+      storageBucket: "where-should-we-meet-f0b1c.firebasestorage.app",
+      messagingSenderId: "318796726456",
+      appId: "1:318796726456:web:a8de29865caf526b67744d"
+    };
+
+    const databasePath = "regionSelector/selections";
+    const memoDatabasePath = "regionSelector/memos";
+    const memoMaxLength = 10;
+
+    const regions = [
+      { name: "강원도", x: "49%", y: "49.5%" },
+      { name: "경기도", x: "36%", y: "53%" },
+      { name: "충청도", x: "37%", y: "64%" },
+      { name: "전라도", x: "36%", y: "75%" },
+      { name: "경상도", x: "57%", y: "69%" },
+      { name: "제주도", x: "28%", y: "95%" }
+    ];
+
+    const characters = [
+      { id: "person1", name: "영준", initial: "영", color: "#d14f45", region: "강원도" },
+      { id: "person2", name: "무성", initial: "무", color: "#1d8a72", region: "경기도" },
+      { id: "person3", name: "규엽", initial: "규", color: "#4767a8", region: "충청도" },
+      { id: "person4", name: "윤형", initial: "윤", color: "#c17a1f", region: "전라도" },
+      { id: "person5", name: "창현", initial: "창", color: "#7b55a3", region: "경상도" },
+      { id: "person6", name: "화평", initial: "화", color: "#cf4f78", region: "제주도" }
+    ];
+
+    const characterList = document.querySelector("#characterList");
+    const summaryGrid = document.querySelector("#summaryGrid");
+    const mapMarkers = document.querySelector("#mapMarkers");
+    const syncStatus = document.querySelector("#syncStatus");
+    const syncStatusText = document.querySelector("#syncStatusText");
+
+    let selectionsRef = null;
+    let memosRef = null;
+    let firebaseReady = false;
+    let databaseApi = null;
+    let editingMemoPersonId = null;
+
+    function setSyncStatus(type, message) {
+      syncStatus.className = `sync-status ${type}`;
+      syncStatusText.textContent = message;
+    }
+
+    function isFirebaseConfigured() {
+      return Boolean(
+        firebaseConfig.apiKey &&
+        firebaseConfig.databaseURL &&
+        firebaseConfig.projectId &&
+        firebaseConfig.appId
+      );
+    }
+
+    function regionOptions() {
+      return regions
+        .map((region) => `<option value="${region.name}">${region.name}</option>`)
+        .join("");
+    }
+
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>"']/g, (character) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        "\"": "&quot;",
+        "'": "&#39;"
+      }[character]));
+    }
+
+    function normalizeMemo(value) {
+      return String(value ?? "").trim().slice(0, memoMaxLength);
+    }
+
+    function getDefaultSelections() {
+      return characters.reduce((result, person) => {
+        result[person.id] = person.region;
+        return result;
+      }, {});
+    }
+
+    function applySelections(selections) {
+      const regionNames = regions.map((region) => region.name);
+
+      characters.forEach((person) => {
+        const selectedRegion = selections?.[person.id];
+        if (regionNames.includes(selectedRegion)) {
+          person.region = selectedRegion;
+        }
+      });
+    }
+
+    function applyMemos(memos) {
+      characters.forEach((person) => {
+        person.memo = normalizeMemo(memos?.[person.id]);
+      });
+    }
+
+    function getPeopleByRegion(regionName) {
+      return characters.filter((person) => person.region === regionName);
+    }
+
+    function saveSelection(personId, regionName) {
+      const person = characters.find((item) => item.id === personId);
+      if (!person) {
+        return;
+      }
+
+      person.region = regionName;
+      updateView();
+
+      if (!firebaseReady || !selectionsRef) {
+        setSyncStatus("local", "Firebase 설정 전이라 이 기기에서만 변경됩니다.");
+        return;
+      }
+
+      databaseApi.set(databaseApi.child(selectionsRef, personId), regionName)
+        .then(() => {
+          setSyncStatus("connected", "Firebase와 연결됨: 다른 기기에도 반영됩니다.");
+        })
+        .catch((error) => {
+          setSyncStatus("error", `저장 실패: ${error.message}`);
+        });
+    }
+
+    function openMemoEditor(personId) {
+      editingMemoPersonId = personId;
+      updateView();
+
+      requestAnimationFrame(() => {
+        const input = characterList.querySelector(`[data-memo-input-id="${personId}"]`);
+        input?.focus();
+        input?.select();
+      });
+    }
+
+    function closeMemoEditor() {
+      editingMemoPersonId = null;
+      updateView();
+    }
+
+    function saveMemo(personId, memoValue) {
+      const person = characters.find((item) => item.id === personId);
+      if (!person) {
+        return;
+      }
+
+      const nextMemo = normalizeMemo(memoValue);
+      person.memo = nextMemo;
+      editingMemoPersonId = null;
+      updateView();
+
+      if (!firebaseReady || !memosRef) {
+        setSyncStatus("local", "Firebase 연결 전이라 이 기기에서만 변경됩니다.");
+        return;
+      }
+
+      databaseApi.set(databaseApi.child(memosRef, personId), nextMemo)
+        .then(() => {
+          setSyncStatus("connected", "Firebase와 연결됨:  다른 기기에 반영됩니다.");
+        })
+        .catch((error) => {
+          setSyncStatus("error", `메모 저장 실패: ${error.message}`);
+        });
+    }
+
+    function renderCharacters() {
+      characterList.innerHTML = characters.map((person) => {
+        const memo = normalizeMemo(person.memo);
+        const safeName = escapeHtml(person.name);
+        const isEditingMemo = editingMemoPersonId === person.id;
+        const memoHtml = isEditingMemo
+          ? `
+            <form class="memo-editor" data-memo-person-id="${person.id}">
+              <label class="sr-only" for="memo-${person.id}">${safeName} 메모 입력</label>
+              <input
+                id="memo-${person.id}"
+                class="memo-input"
+                data-memo-input-id="${person.id}"
+                type="text"
+                maxlength="${memoMaxLength}"
+                value="${escapeHtml(memo)}"
+                placeholder="메모 입력"
+              />
+              <button class="memo-action primary" type="submit">저장</button>
+              <button class="memo-action" type="button" data-memo-cancel="${person.id}">취소</button>
+              <span class="memo-count">${memo.length}/${memoMaxLength}</span>
+            </form>
+          `
+          : `<div class="memo-line ${memo ? "" : "empty-memo"}">${memo ? escapeHtml(memo) : "메모 없음"}</div>`;
+
+        return `
+          <article class="character-row">
+            <div class="avatar" style="--color: ${person.color};" aria-hidden="true">${escapeHtml(person.initial)}</div>
+            <div class="character-info">
+              <div class="name-line">
+                <button class="name-button" type="button" data-memo-person-id="${person.id}" title="메모 추가/수정">${safeName}</button>
+                <span class="current-choice">${escapeHtml(person.region)}</span>
+              </div>
+              ${memoHtml}
+              <label>
+                <span class="sr-only">${safeName} 지역 선택</span>
+                <select data-person-id="${person.id}">
+                  ${regionOptions()}
+                </select>
+              </label>
+            </div>
+          </article>
+        `;
+      }).join("");
+
+      characterList.querySelectorAll(".name-button").forEach((button) => {
+        button.addEventListener("click", () => {
+          openMemoEditor(button.dataset.memoPersonId);
+        });
+      });
+
+      characterList.querySelectorAll(".memo-editor").forEach((form) => {
+        const input = form.querySelector(".memo-input");
+        const count = form.querySelector(".memo-count");
+
+        input.addEventListener("input", () => {
+          input.value = input.value.slice(0, memoMaxLength);
+          count.textContent = `${input.value.length}/${memoMaxLength}`;
+        });
+
+        form.addEventListener("submit", (event) => {
+          event.preventDefault();
+          saveMemo(form.dataset.memoPersonId, input.value);
+        });
+      });
+
+      characterList.querySelectorAll("[data-memo-cancel]").forEach((button) => {
+        button.addEventListener("click", closeMemoEditor);
+      });
+
+      characterList.querySelectorAll("select").forEach((select) => {
+        const person = characters.find((item) => item.id === select.dataset.personId);
+        select.value = person.region;
+
+        select.addEventListener("change", (event) => {
+          saveSelection(select.dataset.personId, event.target.value);
+        });
+      });
+    }
+
+    function renderSummary() {
+      summaryGrid.innerHTML = regions.map((region) => {
+        const selectedPeople = getPeopleByRegion(region.name);
+        const peopleHtml = selectedPeople.length
+          ? selectedPeople.map((person) => `
+              <span class="chip">
+                <span class="chip-dot" style="--color: ${person.color};">${escapeHtml(person.initial)}</span>
+                ${escapeHtml(person.name)}
+                ${person.memo ? `<span class="chip-memo">${escapeHtml(person.memo)}</span>` : ""}
+              </span>
+            `).join("")
+          : `<span class="empty">선택한 캐릭터 없음</span>`;
+
+        return `
+          <article class="region-box">
+            <div class="region-heading">
+              <span>${region.name}</span>
+              <span class="count">${selectedPeople.length}</span>
+            </div>
+            <div class="chip-list">${peopleHtml}</div>
+          </article>
+        `;
+      }).join("");
+    }
+
+    function renderMapMarkers() {
+      mapMarkers.innerHTML = regions.map((region) => {
+        const selectedPeople = getPeopleByRegion(region.name);
+
+        if (!selectedPeople.length) {
+          return "";
+        }
+
+        return `
+          <div class="marker-group" style="--x: ${region.x}; --y: ${region.y};">
+            ${selectedPeople.map((person) => {
+              const title = person.memo ? `${person.name}: ${person.memo}` : person.name;
+              return `
+                <span class="marker-avatar" style="--color: ${person.color};" title="${escapeHtml(title)}">${escapeHtml(person.initial)}</span>
+              `;
+            }).join("")}
+            <span class="marker-label">${region.name}</span>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function updateView() {
+      renderCharacters();
+      renderSummary();
+      renderMapMarkers();
+    }
+
+    async function loadFirebaseSdk() {
+      const [appSdk, dbSdk] = await Promise.all([
+        import("https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js"),
+        import("https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js")
+      ]);
+
+      databaseApi = dbSdk;
+      return { initializeApp: appSdk.initializeApp, ...dbSdk };
+    }
+
+    async function startFirebaseSync() {
+      if (!isFirebaseConfigured()) {
+        updateView();
+        setSyncStatus("local", "Firebase 설정을 입력하면 실시간 동기화됩니다.");
+        return;
+      }
+
+      try {
+        const { initializeApp, getDatabase, ref, onValue, set } = await loadFirebaseSdk();
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+        selectionsRef = ref(database, databasePath);
+        memosRef = ref(database, memoDatabasePath);
+        firebaseReady = true;
+
+        onValue(selectionsRef, (snapshot) => {
+          const selections = snapshot.val();
+
+          if (!selections) {
+            set(selectionsRef, getDefaultSelections());
+            return;
+          }
+
+          applySelections(selections);
+          updateView();
+          setSyncStatus("connected", "Firebase와 연결됨: 다른 기기에도 반영됩니다.");
+        }, (error) => {
+          firebaseReady = false;
+          setSyncStatus("error", `불러오기 실패: ${error.message}`);
+        });
+
+        onValue(memosRef, (snapshot) => {
+          applyMemos(snapshot.val());
+          updateView();
+          setSyncStatus("connected", "Firebase와 연결됨: 다른 기기에 반영됩니다.");
+        }, (error) => {
+          firebaseReady = false;
+          setSyncStatus("error", `메모 불러오기 실패: ${error.message}`);
+        });
+      } catch (error) {
+        firebaseReady = false;
+        updateView();
+        setSyncStatus("error", `Firebase 초기화 실패: ${error.message}`);
+      }
+    }
+
+    startFirebaseSync();
+  </script>
+</body>
+</html>
