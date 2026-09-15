@@ -133,7 +133,7 @@ Authentication 및 Firebase Realtime Database를 사용합니다.
 Google 계정으로 로그인하면 Firebase를 통해 다음과 같은 계정 정보가
 처리되거나 저장될 수 있습니다.
 
-* 표시 이름
+* 닉네임
 * 이메일 주소
 * 프로필 사진 URL
 * 계정 식별 정보
@@ -143,7 +143,7 @@ Google 계정으로 로그인하면 Firebase를 통해 다음과 같은 계정 �
 또한 공유 방 기능을 사용하면 다음과 같은 정보가 Firebase Realtime
 Database에 저장될 수 있습니다.
 
-* 참여자 이름
+* 닉네임
 * 선택한 위치 및 좌표
 * 위치의 주소 또는 표시 이름
 * 사용자가 작성한 메모
